@@ -29,3 +29,28 @@ pipeline {
         }
     }
 }
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                // Build Docker image using host network to avoid npm network issues
+                sh 'docker build --network host -t ci-cd-demo:latest .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                // Optional: run the container to verify the image
+                sh 'docker run --rm ci-cd-demo:latest'
+            }
+        }
+    }
+}
