@@ -1,7 +1,12 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "ci-cd-demo"
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -10,21 +15,50 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                // Run npm install inside a Docker container using host network
-                sh 'docker run --rm --network host -v $PWD:/app -w /app node:18 npm install'
+                echo "Installing npm dependencies using host network..."
+                sh '''
+                docker run --rm \
+                  --network host \
+                  -v "$PWD:/app" \
+                  -w /app \
+                  node:18 \
+                  npm install
+                '''
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build --network host -t ci-cd-demo:latest .'
+                echo "Building Docker image..."
+                sh '''
+                docker build \
+                  --network host \
+                  -t $IMAGE_NAME:latest .
+                '''
             }
         }
 
         stage('Run Container') {
             steps {
-                sh 'docker run --rm ci-cd-demo:latest'
+                echo "Running container..."
+                sh '''
+                docker run --rm \
+                  $IMAGE_NAME:latest
+                '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Pipeline completed successfully"
+        }
+        failure {
+            echo "❌ Pipeline failed"
+        }
+        always {
+            echo "🧹 Cleaning up workspace"
+            cleanWs()
         }
     }
 }
