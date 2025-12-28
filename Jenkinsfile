@@ -21,8 +21,7 @@ pipeline {
                   --network host \
                   -v "$PWD:/app" \
                   -w /app \
-                  node:18 \
-                  npm install
+                  node:18 npm install
                 '''
             }
         }
@@ -40,9 +39,14 @@ pipeline {
 
         stage('Run Container') {
             steps {
-                echo "Running container..."
+                echo "Running container in detached mode..."
                 sh '''
-                docker run --rm \
+                docker stop ci-cd-demo || true
+                docker rm ci-cd-demo || true
+
+                docker run -d \
+                  --name ci-cd-demo \
+                  -p 3000:3000 \
                   $IMAGE_NAME:latest
                 '''
             }
